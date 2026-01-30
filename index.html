@@ -3,378 +3,559 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flux Journal | Esperienza IA</title>
+     <link rel="icon" href="https://www.svgrepo.com/show/367483/flux.svg" type="image/png">
+    <title>Flux Journal | Future Living</title>
     
-    <!-- Librerie Fondamentali via CDN -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Instrument+Serif:ital@0;1&display=swap');
-        
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --accent: #22d3ee;
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #121212;
+            --text-primary: #ffffff;
+            --text-muted: #d1d1d6;
+            --accent: #00f0ff;
+            --accent-glow: rgba(0, 240, 255, 0.4);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-bright: rgba(255, 255, 255, 0.12);
+            --border: rgba(255, 255, 255, 0.15);
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --cursor-size: 20px;
         }
 
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #050505;
-            color: #ffffff;
+        [data-theme="minimal"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f0f0f2;
+            --text-primary: #000000;
+            --text-muted: #4b5563;
+            --accent: #2563eb;
+            --accent-glow: rgba(37, 99, 235, 0.15);
+            --glass: rgba(0, 0, 0, 0.04);
+            --glass-bright: rgba(0, 0, 0, 0.08);
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="zen"] {
+            --bg-primary: #1c1f1c;
+            --bg-secondary: #252925;
+            --text-primary: #ffffff;
+            --text-muted: #b0b0b0;
+            --accent: #4ade80;
+            --accent-glow: rgba(74, 222, 128, 0.3);
+            --border: rgba(255, 255, 255, 0.12);
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            transition: background-color 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.5s ease;
             overflow-x: hidden;
+            cursor: none;
         }
 
-        .font-serif { font-family: 'Instrument Serif', serif; }
-
-        /* Effetti Vetro Liquido */
-        .glass {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-        }
-
-        .glass-hover:hover {
-            background: rgba(255, 255, 255, 0.07);
-            border-color: rgba(34, 211, 238, 0.3);
-            transform: translateY(-4px);
-        }
-
-        /* Animazioni di sfondo */
-        .blob {
-            position: absolute;
-            width: 500px;
-            height: 500px;
-            background: linear-gradient(180deg, rgba(34, 211, 238, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%);
-            filter: blur(80px);
+        #cursor {
+            position: fixed;
+            top: 0; left: 0;
+            width: var(--cursor-size);
+            height: var(--cursor-size);
+            border: 1px solid var(--accent);
             border-radius: 50%;
-            z-index: -1;
-            animation: move 20s infinite alternate;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+            mix-blend-mode: difference;
+        }
+        #cursor.hovered {
+            width: 50px; height: 50px;
+            background-color: var(--accent-glow);
+            border-color: transparent;
         }
 
-        @keyframes move {
-            from { transform: translate(-10%, -10%) scale(1); }
-            to { transform: translate(20%, 20%) scale(1.2); }
+        h1, h2, h3, h4 { font-family: var(--font-display); }
+
+        .flux-card {
+            background: linear-gradient(135deg, var(--glass-bright) 0%, var(--glass) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            overflow: hidden;
+            color: var(--text-primary);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        .flux-card:hover {
+            transform: translateY(-12px);
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            box-shadow: 0 15px 40px -10px var(--accent-glow);
         }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-        .fade-entry {
-            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #reader-modal {
+            clip-path: circle(0% at 50% 50%);
+            transition: clip-path 0.8s cubic-bezier(0.86, 0, 0.07, 1);
+        }
+        #reader-modal.active {
+            clip-path: circle(150% at 50% 50%);
+        }
+
+        #ai-panel {
+            position: fixed;
+            top: 1rem; right: -420px;
+            width: 400px;
+            height: calc(100vh - 2rem);
+            background: linear-gradient(160deg, var(--glass-bright) 0%, var(--glass) 100%);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--border);
+            border-radius: 2rem;
+            z-index: 50;
+            transition: right 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            color: var(--text-primary);
+            box-shadow: -20px 20px 60px rgba(0,0,0,0.4), inset 0 0 20px rgba(255,255,255,0.05);
+            margin-right: 1rem;
+        }
+        #ai-panel.open { right: 0; }
+        
+        .ai-bubble {
+            animation: fadeIn 0.3s ease forwards;
+            margin-bottom: 1.25rem;
+        }
+
+        .ai-bubble-content {
+            padding: 1rem 1.25rem;
+            border-radius: 1.5rem;
+            line-height: 1.6;
+            font-weight: 450;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .filter-btn {
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .filter-btn:hover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+            transform: scale(1.05);
+        }
+
+        .typing-dot {
+            width: 6px; height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        #chat-history::-webkit-scrollbar { width: 4px; }
+        #chat-history::-webkit-scrollbar-track { background: transparent; }
+        #chat-history::-webkit-scrollbar-thumb { 
+            background: var(--border); 
+            border-radius: 10px;
+        }
+
+        .article-content h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .article-content p {
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+        .article-content blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 1.5rem;
+            font-style: italic;
+            margin: 2rem 0;
+            color: var(--text-primary);
         }
     </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="antialiased selection:bg-cyan-500 selection:text-white">
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+    <div id="cursor"></div>
 
-        // Componente Icona per Lucide (Necessario con CDN)
-        const LucideIcon = ({ name, size = 20, className = "" }) => {
-            useEffect(() => {
-                if (window.lucide) window.lucide.createIcons();
-            }, [name]);
-            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
-        };
+    <nav class="fixed top-0 w-full z-40 px-6 py-4 flex justify-between items-center transition-all duration-300 backdrop-blur-xl border-b border-[var(--border)]" id="navbar">
+        <div class="flex items-center gap-2 cursor-pointer group" onclick="app.router('home')">
+            <div class="w-8 h-8 bg-black dark:bg-white rounded-full flex items-center justify-center overflow-hidden relative border border-[var(--border)]">
+                <div class="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span class="relative text-white dark:text-black font-bold font-display">F</span>
+            </div>
+            <span class="text-xl font-bold tracking-tighter font-display uppercase">Flux<span style="color:var(--accent)">.Journal</span></span>
+        </div>
 
-        // --- Logica API Gemini ---
-        const callGemini = async (prompt, systemPrompt = "") => {
-            const key = localStorage.getItem('flux_gemini_key');
-            if (!key) throw new Error("API_KEY_MISSING");
+        <div class="hidden md:flex gap-8 text-sm font-semibold uppercase tracking-widest">
+            <button onclick="app.filterCategory('Tutti'); app.scrollToGrid()" class="hover:text-[var(--accent)] transition-colors bg-transparent border-none cursor-pointer text-[var(--text-primary)]">Articoli</button>
+            <button onclick="app.filterCategory('Tech'); app.scrollToGrid()" class="hover:text-[var(--accent)] transition-colors bg-transparent border-none cursor-pointer text-[var(--text-primary)]">Trends</button>
+            <button onclick="app.filterCategory('Design'); app.scrollToGrid()" class="hover:text-[var(--accent)] transition-colors bg-transparent border-none cursor-pointer text-[var(--text-primary)]">Collezioni</button>
+        </div>
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] }
-                })
-            });
+        <div class="flex items-center gap-4">
+            <button onclick="app.toggleTheme()" class="w-10 h-10 rounded-full border border-[var(--border)] flex items-center justify-center hover:border-[var(--accent)] transition-colors text-[var(--text-primary)] bg-[var(--glass)]">
+                <i class="fa-solid fa-circle-half-stroke"></i>
+            </button>
+            <button onclick="app.toggleAI()" class="w-10 h-10 rounded-full bg-[var(--accent)] text-white dark:text-black font-bold shadow-[0_0_20px_var(--accent-glow)] hover:scale-110 transition-transform flex items-center justify-center">
+                <i class="fa-solid fa-robot"></i>
+            </button>
+        </div>
+    </nav>
 
-            if (!response.ok) throw new Error("API_ERROR");
-            const data = await response.json();
-            return data.candidates?.[0]?.content?.parts?.[0]?.text || "Nessun contenuto generato.";
-        };
+    <main id="main-container" class="pt-24 min-h-screen px-6 md:px-12 lg:px-24 pb-20">
+        <header class="relative py-20 mb-20">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-20 animate-pulse"></div>
+            <p class="text-[var(--accent)] text-sm tracking-[0.3em] uppercase font-bold mb-4 opacity-0" style="animation: fadeIn 1s ease forwards">Chronicles of 2026</p>
+            <h1 class="text-6xl md:text-8xl font-bold leading-tight mb-6 opacity-0 text-[var(--text-primary)]" style="animation: slideUp 1s ease 0.2s forwards">
+                Oltre la <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-purple-600">Realtà Conosciuta.</span>
+            </h1>
+        </header>
 
-        // --- Componenti UI ---
-        const Button = ({ children, onClick, variant = "primary", className = "" }) => {
-            const styles = variant === "primary" 
-                ? "bg-cyan-500 text-black hover:bg-cyan-400" 
-                : "glass text-white hover:bg-white/10";
-            return (
-                <button onClick={onClick} className={`px-6 py-3 rounded-full font-bold transition-all active:scale-95 ${styles} ${className}`}>
-                    {children}
-                </button>
-            );
-        };
+        <div class="flex flex-wrap gap-4 mb-12 border-b border-[var(--border)] pb-6 sticky top-20 z-30 bg-[var(--bg-primary)]/40 backdrop-blur-xl transition-colors" id="filter-container">
+            <button onclick="app.filterCategory('Tutti')" class="filter-btn px-6 py-2 rounded-full text-xs transition-all font-bold uppercase tracking-widest">Tutti</button>
+            <button onclick="app.filterCategory('Tech')" class="filter-btn px-6 py-2 rounded-full text-xs transition-all font-bold uppercase tracking-widest">Tech</button>
+            <button onclick="app.filterCategory('Design')" class="filter-btn px-6 py-2 rounded-full text-xs transition-all font-bold uppercase tracking-widest">Design</button>
+            <button onclick="app.filterCategory('Science')" class="filter-btn px-6 py-2 rounded-full text-xs transition-all font-bold uppercase tracking-widest">Science</button>
+        </div>
 
-        function App() {
-            const [view, setView] = useState('home'); // 'home', 'article', 'write', 'settings'
-            const [articles, setArticles] = useState([]);
-            const [activeArticle, setActiveArticle] = useState(null);
-            const [isAiOpen, setIsAiOpen] = useState(false);
-            const [apiKey, setApiKey] = useState(localStorage.getItem('flux_gemini_key') || "");
-            
-            // Stato per Chat AI
-            const [chat, setChat] = useState([]);
-            const [chatInput, setChatInput] = useState("");
-            const [isTyping, setIsTyping] = useState(false);
+        <div id="article-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+    </main>
 
-            // Caricamento iniziale
-            useEffect(() => {
-                const saved = localStorage.getItem('flux_articles');
-                if (saved) {
-                    setArticles(JSON.parse(saved));
-                } else {
-                    const demo = [
-                        {
-                            id: 1,
-                            title: "L'Evoluzione della Coscienza Sintetica",
-                            excerpt: "Come i modelli linguistici stanno riscrivendo il concetto di creatività.",
-                            content: "L'intelligenza artificiale non è più solo uno strumento, ma un riflesso della nostra capacità di sognare attraverso i dati. In questo articolo esploriamo come il 'Flux' di informazioni stia plasmando una nuova era digitale...",
-                            category: "Futurismo",
-                            date: "30 Gen 2026",
-                            image: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=1000"
-                        }
-                    ];
-                    setArticles(demo);
-                    localStorage.setItem('flux_articles', JSON.stringify(demo));
-                }
-            }, []);
-
-            const saveNewArticle = (article) => {
-                const updated = [article, ...articles];
-                setArticles(updated);
-                localStorage.setItem('flux_articles', JSON.stringify(updated));
-                setView('home');
-            };
-
-            const handleAiChat = async () => {
-                if (!chatInput.trim()) return;
-                const userMsg = chatInput;
-                setChatInput("");
-                setChat(prev => [...prev, { role: 'user', text: userMsg }]);
-                setIsTyping(true);
-
-                try {
-                    const reply = await callGemini(userMsg, "Sei Flux AI, un editor di riviste futurista. Rispondi con stile elegante e tecnico.");
-                    setChat(prev => [...prev, { role: 'bot', text: reply }]);
-                } catch (e) {
-                    setChat(prev => [...prev, { role: 'bot', text: "Errore: Controlla la tua API Key nelle impostazioni." }]);
-                } finally {
-                    setIsTyping(false);
-                }
-            };
-
-            return (
-                <div className="min-h-screen relative">
-                    {/* Sfondo Decorativo */}
-                    <div className="blob top-0 left-0"></div>
-                    <div className="blob bottom-0 right-0" style={{ animationDelay: '-10s' }}></div>
-
-                    {/* Navigazione */}
-                    <nav className="fixed top-0 w-full z-50 p-6">
-                        <div className="max-w-7xl mx-auto flex justify-between items-center glass p-4 rounded-3xl">
-                            <div className="flex items-center gap-8">
-                                <h1 className="text-2xl font-black tracking-tighter cursor-pointer" onClick={() => setView('home')}>FLUX.</h1>
-                                <div className="hidden md:flex gap-6 text-sm font-semibold opacity-60">
-                                    <button onClick={() => setView('home')} className="hover:opacity-100">Archivio</button>
-                                    <button onClick={() => setView('write')} className="hover:opacity-100">Scrivi</button>
-                                </div>
-                            </div>
-                            <div className="flex gap-3">
-                                <button onClick={() => setView('settings')} className="p-3 glass rounded-full hover:bg-white/10">
-                                    <LucideIcon name="settings" size={18} />
-                                </button>
-                                <Button onClick={() => setView('write')} className="hidden md:block">Nuovo Post</Button>
-                            </div>
-                        </div>
-                    </nav>
-
-                    {/* Contenuto Principale */}
-                    <main className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
-                        
-                        {view === 'home' && (
-                            <div className="fade-entry">
-                                <header className="mb-16">
-                                    <span className="text-cyan-400 font-bold tracking-[0.3em] text-xs uppercase">Edizione Digitale 2026</span>
-                                    <h2 className="text-6xl md:text-8xl font-black tracking-tighter mt-4 leading-none italic">CURATED<br/>FLOW.</h2>
-                                </header>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {articles.map(art => (
-                                        <div 
-                                            key={art.id} 
-                                            onClick={() => { setActiveArticle(art); setView('article'); }}
-                                            className="glass glass-hover p-4 rounded-[2.5rem] cursor-pointer group transition-all"
-                                        >
-                                            <div className="aspect-[4/3] rounded-[2rem] overflow-hidden mb-6">
-                                                <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
-                                            </div>
-                                            <div className="px-2">
-                                                <span className="text-[10px] uppercase font-black tracking-widest text-cyan-400">{art.category}</span>
-                                                <h3 className="text-2xl font-bold mt-2 leading-tight group-hover:text-cyan-300 transition-colors">{art.title}</h3>
-                                                <p className="mt-4 opacity-50 text-sm line-clamp-2">{art.excerpt}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {view === 'article' && activeArticle && (
-                            <div className="fade-entry max-w-3xl mx-auto">
-                                <button onClick={() => setView('home')} className="flex items-center gap-2 opacity-40 hover:opacity-100 mb-10 transition-all">
-                                    <LucideIcon name="arrow-left" size={16} /> Indietro
-                                </button>
-                                <img src={activeArticle.image} className="w-full h-[400px] object-cover rounded-[3rem] mb-12 shadow-2xl shadow-cyan-500/10" />
-                                <span className="text-cyan-400 font-black uppercase tracking-widest text-xs">{activeArticle.category}</span>
-                                <h1 className="text-5xl md:text-7xl font-black tracking-tighter mt-4 mb-8 leading-none italic">{activeArticle.title}</h1>
-                                <div className="font-serif text-2xl md:text-3xl leading-relaxed opacity-80 whitespace-pre-wrap">
-                                    {activeArticle.content}
-                                </div>
-                            </div>
-                        )}
-
-                        {view === 'write' && (
-                            <div className="fade-entry max-w-4xl mx-auto">
-                                <h2 className="text-5xl font-black tracking-tighter mb-10">Crea Contenuto</h2>
-                                <div className="glass p-8 rounded-[3rem] space-y-6">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Titolo dell'articolo..." 
-                                        className="w-full bg-transparent border-b border-white/10 py-4 text-3xl font-bold outline-none focus:border-cyan-400 transition-all"
-                                        id="post-title"
-                                    />
-                                    <textarea 
-                                        placeholder="Inizia a scrivere la tua storia..." 
-                                        className="w-full bg-white/5 border border-white/10 rounded-3xl p-6 h-64 outline-none focus:border-cyan-400 transition-all text-lg font-serif"
-                                        id="post-content"
-                                    ></textarea>
-                                    <div className="flex justify-end gap-4">
-                                        <Button variant="secondary" onClick={() => setView('home')}>Annulla</Button>
-                                        <Button onClick={() => {
-                                            const title = document.getElementById('post-title').value;
-                                            const content = document.getElementById('post-content').value;
-                                            if (title && content) {
-                                                saveNewArticle({
-                                                    id: Date.now(),
-                                                    title,
-                                                    content,
-                                                    excerpt: content.substring(0, 100) + '...',
-                                                    category: "Original",
-                                                    date: "Oggi",
-                                                    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000"
-                                                });
-                                            }
-                                        }}>Pubblica nel Flusso</Button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {view === 'settings' && (
-                            <div className="fade-entry max-w-xl mx-auto text-center">
-                                <LucideIcon name="shield-check" size={60} className="mx-auto mb-6 text-cyan-400" />
-                                <h2 className="text-4xl font-black tracking-tighter mb-4">Configurazione IA</h2>
-                                <p className="opacity-50 mb-8">Inserisci la tua chiave API di Google Gemini per sbloccare l'assistente di scrittura e la chat intelligente.</p>
-                                <div className="glass p-6 rounded-3xl space-y-4 text-left">
-                                    <label className="text-xs uppercase font-black tracking-widest opacity-40">Gemini API Key</label>
-                                    <input 
-                                        type="password"
-                                        value={apiKey}
-                                        onChange={(e) => {
-                                            setApiKey(e.target.value);
-                                            localStorage.setItem('flux_gemini_key', e.target.value);
-                                        }}
-                                        className="w-full bg-black/40 border border-white/10 p-4 rounded-2xl outline-none focus:border-cyan-400"
-                                        placeholder="Incolla qui la tua chiave..."
-                                    />
-                                    <p className="text-[10px] opacity-30 italic">La chiave viene salvata solo nel tuo browser.</p>
-                                </div>
-                                <Button onClick={() => setView('home')} className="mt-8">Salva e Chiudi</Button>
-                            </div>
-                        )}
-                    </main>
-
-                    {/* Chat AI Integrata */}
-                    <div className={`fixed inset-y-0 right-0 z-[100] w-full md:w-[450px] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] 
-                        ${isAiOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                        <div className="h-full bg-black/80 backdrop-blur-3xl border-l border-white/10 flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
-                            <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
-                                    <span className="font-black text-sm uppercase tracking-widest">Flux Intelligence</span>
-                                </div>
-                                <button onClick={() => setIsAiOpen(false)} className="p-2 glass rounded-full hover:bg-white/10">
-                                    <LucideIcon name="x" size={18} />
-                                </button>
-                            </div>
-                            
-                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                                {chat.length === 0 && (
-                                    <div className="text-center py-20 opacity-30">
-                                        <LucideIcon name="message-square" size={40} className="mx-auto mb-4" />
-                                        <p className="text-sm">Chiedimi di scrivere un articolo<br/>o di analizzare un tema futurista.</p>
-                                    </div>
-                                )}
-                                {chat.map((msg, i) => (
-                                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-cyan-500 text-black font-bold' : 'glass border-white/5'}`}>
-                                            {msg.text}
-                                        </div>
-                                    </div>
-                                ))}
-                                {isTyping && <div className="text-[10px] font-black uppercase tracking-widest animate-pulse opacity-40">L'IA sta elaborando...</div>}
-                            </div>
-
-                            <div className="p-6 border-t border-white/10">
-                                <div className="glass p-2 rounded-2xl flex items-center">
-                                    <input 
-                                        type="text" 
-                                        value={chatInput}
-                                        onChange={(e) => setChatInput(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleAiChat()}
-                                        placeholder="Scrivi un messaggio..." 
-                                        className="bg-transparent flex-1 px-4 outline-none text-sm"
-                                    />
-                                    <button onClick={handleAiChat} className="p-3 bg-cyan-500 text-black rounded-xl active:scale-90 transition-all">
-                                        <LucideIcon name="send" size={16} />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Trigger Pulsante AI */}
-                    <button 
-                        onClick={() => setIsAiOpen(true)}
-                        className="fixed bottom-8 right-8 z-[60] w-16 h-16 bg-white text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-90 transition-all group"
-                    >
-                        <LucideIcon name="sparkles" size={24} className="group-hover:rotate-12 transition-transform" />
-                    </button>
+    <div id="reader-modal" class="fixed inset-0 bg-[var(--bg-primary)]/80 backdrop-blur-3xl z-[60] overflow-y-auto">
+        <button onclick="app.closeArticle()" class="fixed top-8 right-8 z-50 w-12 h-12 rounded-full bg-[var(--glass-bright)] border border-[var(--border)] text-[var(--text-primary)] flex items-center justify-center hover:rotate-90 backdrop-blur-md transition-transform shadow-2xl">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="max-w-4xl mx-auto pt-32 px-6 pb-20">
+             <div id="modal-image" class="w-full h-[500px] object-cover rounded-[3rem] mb-12 bg-gray-800 bg-center bg-cover border border-[var(--border)] shadow-2xl relative">
+                <div class="absolute bottom-8 left-8">
+                    <span id="modal-category" class="bg-[var(--accent)] text-black px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest"></span>
                 </div>
-            );
-        }
+             </div>
+             <h1 id="modal-title" class="text-4xl md:text-7xl font-bold mb-12 text-[var(--text-primary)] leading-[1.1]"></h1>
+             <div id="modal-content" class="article-content text-[var(--text-muted)] text-xl"></div>
+        </div>
+    </div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+    <div id="ai-panel">
+        <div class="p-8 border-b border-[var(--border)] flex justify-between items-center rounded-t-[2rem] bg-white/5">
+            <div class="flex items-center gap-4">
+                <div class="w-4 h-4 bg-green-400 rounded-full animate-pulse shadow-[0_0_15px_#4ade80]"></div>
+                <div>
+                    <h2 class="text-xl font-bold tracking-tight">Fluxie Assistant</h2>
+                    <p class="text-[10px] text-[var(--accent)] font-bold uppercase tracking-widest opacity-70">Neural Core Active</p>
+                </div>
+            </div>
+            <button onclick="app.toggleAI()" class="w-8 h-8 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center"><i class="fa-solid fa-times text-xl"></i></button>
+        </div>
+        <div id="chat-history" class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div class="ai-bubble">
+                <span class="ai-bubble-content bg-[var(--glass-bright)] border border-[var(--border)] text-[var(--text-primary)] inline-block max-w-[90%] shadow-lg">
+                    Ciao! 👋 Sono **Fluxie**. Sto analizzando le correnti temporali per te. Come posso aiutarti oggi?
+                </span>
+            </div>
+        </div>
+        <div class="p-6 border-t border-[var(--border)] bg-black/10 rounded-b-[2rem]">
+            <div class="relative group">
+                <input type="text" id="chat-input" placeholder="Interroga il futuro..." class="w-full bg-[var(--glass)] border-2 border-[var(--border)] rounded-2xl px-5 py-4 text-[var(--text-primary)] outline-none focus:border-[var(--accent)] pr-14 transition-all placeholder:text-[var(--text-muted)] backdrop-blur-lg">
+                <button onclick="app.handleChatSubmit()" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-[var(--accent)] text-white flex items-center justify-center shadow-lg group-hover:scale-105 active:scale-95 transition-all">
+                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = "AIzaSyDonT6p99AiMxU5on9xbF1nALOS5SK8ArY"; 
+
+        const mockData = [
+            {
+                id: 1,
+                title: "Il Tramonto del Silicio: L'Era dei Bio-Computer",
+                category: "Tech",
+                date: "30 Gen 2026",
+                image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
+                summary: "La fisica dei semiconduttori ha raggiunto il capolinea. Entra in scena la computazione biologica basata su DNA e proteine.",
+                content: `
+                    <p class="lead text-2xl mb-8">Dopo decenni di dominio assoluto, la Legge di Moore si è scontrata con l'insormontabile muro della fisica quantistica. Il silicio non può più restringersi. Ma la risposta non risiede nei minerali, bensì nella vita stessa.</p>
+                    
+                    <h2>Oltre il Binario</h2>
+                    <p>I nuovi processori "Organic-V" non utilizzano transistor nel senso tradizionale. Sfruttano invece la capacità del DNA di immagazzinare enormi quantità di dati in spazi microscopici e la velocità delle sinapsi sintetiche per elaborare informazioni in parallelo, superando di ordini di grandezza i supercomputer attuali.</p>
+                    
+                    <blockquote>"Non stiamo più costruendo macchine che imitano la vita. Stiamo programmando la vita per diventare la macchina più potente mai esistita." — Dr. Elara Vance, Neuralis Lab.</blockquote>
+
+                    <h2>Sostenibilità Radicale</h2>
+                    <p>Uno dei vantaggi più sconvolgenti è il consumo energetico. Mentre i data center attuali richiedono intere centrali elettriche per raffreddarsi, un bio-processore può operare a temperatura ambiente, alimentato da una semplice soluzione glucosata. È il calcolo a 'emissioni zero' che il pianeta aspettava.</p>
+                `
+            },
+            {
+                id: 2,
+                title: "Architettura Liquida: Cemento che Respira",
+                category: "Design",
+                date: "28 Gen 2026",
+                image: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80",
+                summary: "Il concetto di staticità edilizia è morto. Scopri le città che mutano forma per combattere il cambiamento climatico.",
+                content: `
+                    <p class="lead text-2xl mb-8">Immaginate una città che si rimpicciolisce durante le ondate di calore per creare ombra e si espande in inverno per catturare ogni raggio di sole. Non è fantascienza, è la Nuova Architettura Liquida.</p>
+                    
+                    <h2>Materiali Polimerici Adattivi</h2>
+                    <p>Grazie all'integrazione di materiali a memoria di forma e sensori IoT di nuova generazione, gli edifici moderni possono ora rispondere autonomamente agli stimoli ambientali. Se il vento soffia troppo forte, la struttura aumenta la sua elasticità; se l'aria è inquinata, la facciata 'inspira' CO2 attraverso membrane fotosintetiche.</p>
+                    
+                    <blockquote>"La casa del futuro non è un rifugio statico, ma un partner simbiotico che protegge e nutre chi la abita."</blockquote>
+
+                    <h2>Il Design del Flusso</h2>
+                    <p>Gli spazi interni sono altrettanto dinamici. Pareti che scorrono su binari magnetici silenziosi permettono di trasformare un ufficio in una camera da letto o in una palestra in pochi secondi, ottimizzando ogni centimetro quadrato delle nostre metropoli sempre più affollate.</p>
+                `
+            },
+            {
+                id: 3,
+                title: "Neuromarketing: L'Etica dell'Inconscio",
+                category: "Science",
+                date: "25 Gen 2026",
+                image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80",
+                summary: "Con il diffondersi delle interfacce neurali, i brand possono leggere i tuoi desideri prima ancora che tu li provi.",
+                content: `
+                    <p class="lead text-2xl mb-8">La frontiera finale della privacy è stata violata. Non parliamo più di cronologia di ricerca, ma di impulsi bioelettrici catturati direttamente dalla corteccia prefrontale.</p>
+                    
+                    <h2>Vendite a Velocità di Pensiero</h2>
+                    <p>Le nuove cuffie VR 'Neuro-Sync' monitorano i micro-rilasci di dopamina mentre navighiamo nel metaverso. Se guardi un oggetto e il tuo cervello reagisce con interesse, l'algoritmo lo sa. Il rischio? Una società dove il libero arbitrio viene soffocato da desideri artificialmente indotti in un loop di feedback infinito.</p>
+                    
+                    <h2>La Resistenza Etica</h2>
+                    <p>Il 'Manifesto della Libertà Mentale' è diventato il documento più importante del 2026. Attivisti e neuroscienziati chiedono leggi che rendano illegale l'estrazione di dati emotivi senza un consenso esplicito e criptato. Ma con i profitti potenziali alle stelle, la battaglia è appena iniziata.</p>
+
+                    <blockquote>"Se possono prevedere la tua scelta, hai davvero scelto?"</blockquote>
+                `
+            }
+        ];
+
+        const app = {
+            state: {
+                theme: 'cyberpunk',
+                articles: mockData,
+                activeCategory: 'Tutti',
+                chatOpen: false,
+                isGenerating: false
+            },
+
+            init() {
+                this.setupCursor();
+                this.updateFilterButtons();
+                this.renderArticles();
+                this.setupEventListeners();
+            },
+
+            router(page) {
+                if (page === 'home') {
+                    this.filterCategory('Tutti');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            },
+
+            filterCategory(category) {
+                this.state.activeCategory = category;
+                this.updateFilterButtons();
+                this.renderArticles();
+            },
+
+            updateFilterButtons() {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    const isActive = btn.textContent.trim() === this.state.activeCategory;
+                    if (isActive) {
+                        btn.style.borderColor = 'var(--accent)';
+                        btn.style.color = 'var(--text-primary)';
+                        btn.style.backgroundColor = 'var(--accent-glow)';
+                    } else {
+                        btn.style.borderColor = 'var(--border)';
+                        btn.style.color = 'var(--text-primary)';
+                        btn.style.backgroundColor = 'var(--glass)';
+                    }
+                });
+            },
+
+            renderArticles() {
+                const grid = document.getElementById('article-grid');
+                if (!grid) return;
+                const filtered = this.state.activeCategory === 'Tutti' 
+                    ? this.state.articles 
+                    : this.state.articles.filter(a => a.category === this.state.activeCategory);
+
+                grid.innerHTML = '';
+                filtered.forEach((art, index) => {
+                    const el = document.createElement('article');
+                    el.className = "flux-card rounded-[3rem] p-8 flex flex-col justify-between h-[520px] cursor-pointer group opacity-0";
+                    el.style.animation = `fadeIn 0.5s ease forwards ${index * 0.1}s`;
+                    el.onclick = () => this.openArticle(art.id);
+                    el.innerHTML = `
+                        <div class="relative h-64 mb-8 overflow-hidden rounded-[2.5rem] border border-[var(--border)] shadow-inner">
+                            <img src="${art.image}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="${art.title}">
+                            <div class="absolute top-6 left-6 backdrop-blur-md bg-white/20 border border-white/30 text-white dark:text-black text-[10px] font-black px-5 py-2 rounded-full uppercase tracking-[0.2em] shadow-xl">
+                                ${art.category}
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-bold mb-4 group-hover:text-[var(--accent)] transition-colors leading-tight font-display">${art.title}</h3>
+                            <p class="text-[var(--text-muted)] text-base line-clamp-3 font-medium opacity-80 leading-relaxed">${art.summary}</p>
+                        </div>
+                        <div class="mt-8 flex justify-between items-center text-[10px] text-[var(--text-primary)] font-black pt-6 border-t border-[var(--border)] uppercase tracking-widest">
+                            <span class="opacity-40">${art.date}</span>
+                            <span class="text-[var(--accent)] flex items-center gap-3 group-hover:gap-5 transition-all">Approfondisci <i class="fa-solid fa-arrow-right-long text-xs"></i></span>
+                        </div>
+                    `;
+                    grid.appendChild(el);
+                });
+            },
+
+            scrollToGrid() {
+                const container = document.getElementById('filter-container');
+                if (container) window.scrollTo({ top: container.offsetTop - 100, behavior: 'smooth' });
+            },
+
+            setupCursor() {
+                const cursor = document.getElementById('cursor');
+                document.addEventListener('mousemove', (e) => {
+                    cursor.style.left = e.clientX + 'px';
+                    cursor.style.top = e.clientY + 'px';
+                });
+                document.body.addEventListener('mouseover', (e) => {
+                    if (e.target.closest('button, .flux-card, .cursor-pointer, input')) cursor.classList.add('hovered');
+                    else cursor.classList.remove('hovered');
+                });
+            },
+
+            openArticle(id) {
+                const art = this.state.articles.find(a => a.id === id);
+                document.getElementById('modal-title').textContent = art.title;
+                document.getElementById('modal-content').innerHTML = art.content;
+                document.getElementById('modal-category').textContent = art.category;
+                document.getElementById('modal-image').style.backgroundImage = `url(${art.image})`;
+                document.getElementById('reader-modal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            },
+
+            closeArticle() {
+                document.getElementById('reader-modal').classList.remove('active');
+                document.body.style.overflow = 'auto';
+            },
+
+            toggleTheme() {
+                const themes = ['cyberpunk', 'minimal', 'zen'];
+                this.state.theme = themes[(themes.indexOf(this.state.theme) + 1) % themes.length];
+                document.documentElement.setAttribute('data-theme', this.state.theme);
+                this.updateFilterButtons();
+            },
+
+            toggleAI() {
+                this.state.chatOpen = !this.state.chatOpen;
+                document.getElementById('ai-panel').classList.toggle('open', this.state.chatOpen);
+            },
+
+            setupEventListeners() {
+                const input = document.getElementById('chat-input');
+                input?.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.handleChatSubmit();
+                });
+            },
+
+            async handleChatSubmit() {
+                if (this.state.isGenerating) return;
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if (!text) return;
+
+                this.addMessage(text, 'user');
+                input.value = '';
+                
+                this.state.isGenerating = true;
+                const loadingDiv = this.addTypingIndicator();
+                const aiResponse = await this.callGemini(text);
+                
+                loadingDiv.remove();
+                this.addMessage(aiResponse, 'ai');
+                this.state.isGenerating = false;
+            },
+
+            addMessage(text, role) {
+                const history = document.getElementById('chat-history');
+                const div = document.createElement('div');
+                div.className = `ai-bubble ${role === 'user' ? 'text-right' : ''}`;
+                const bubbleClass = role === 'user' 
+                    ? 'bg-[var(--accent)] text-black font-bold' 
+                    : 'bg-[var(--glass-bright)] border-2 border-[var(--border)] text-[var(--text-primary)] shadow-xl backdrop-blur-md';
+                div.innerHTML = `<span class="ai-bubble-content ${bubbleClass} inline-block max-w-[85%]">${text}</span>`;
+                history.appendChild(div);
+                history.scrollTop = history.scrollHeight;
+            },
+
+            addTypingIndicator() {
+                const history = document.getElementById('chat-history');
+                const div = document.createElement('div');
+                div.className = "ai-bubble";
+                div.innerHTML = `<span class="ai-bubble-content bg-[var(--glass)] border border-[var(--border)] inline-block">
+                    <div class="typing-dot" style="animation-delay: 0s"></div>
+                    <div class="typing-dot" style="animation-delay: 0.2s"></div>
+                    <div class="typing-dot" style="animation-delay: 0.4s"></div>
+                </span>`;
+                history.appendChild(div);
+                history.scrollTop = history.scrollHeight;
+                return div;
+            },
+
+            async callGemini(query, retryCount = 0) {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: query }] }],
+                            systemInstruction: { parts: [{ text: "Sei Fluxie, l'assistente futuristico di Flux Journal. Rispondi con stile sci-fi ma cordiale. Sii conciso." }] }
+                        })
+                    });
+                    if (!response.ok && retryCount < 5) {
+                        await new Promise(res => setTimeout(res, Math.pow(2, retryCount) * 1000));
+                        return this.callGemini(query, retryCount + 1);
+                    }
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Errore nel segnale! 🌌";
+                } catch (error) { return "Interferenza rilevata! 🚀"; }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
 </html>
