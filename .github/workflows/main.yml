@@ -1,0 +1,41 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main"] # Si attiva ogni volta che carichi codice sul ramo main
+
+  # Permette di far girare il workflow manualmente dalla scheda Actions
+  workflow_dispatch:
+
+# Permessi necessari per pubblicare su GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Setup di GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Caricamento dell'artefatto
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Carica l'intera cartella root (dove si trova il tuo index.html)
+          path: '.'
+
+      - name: Deploy su GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
