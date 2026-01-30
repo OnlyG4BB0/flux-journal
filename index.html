@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flux Journal | AI Magazine</title>
+    
+    <!-- Librerie esterne -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Playfair+Display:ital@0;1&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.5s ease; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        
+        /* Animazioni Custom */
+        .animate-pulse-slow { animation: pulse-slow 15s infinite alternate; }
+        @keyframes pulse-slow {
+            0% { transform: scale(1); opacity: 0.1; }
+            100% { transform: scale(1.4); opacity: 0.25; }
+        }
+
+        /* Scrollbar personalizzata per Liquid Glass */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(34, 211, 238, 0.4); }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        
+        .fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- Configurazione API ---
+        // Se usi GitHub Actions, puoi sostituire questa stringa durante il build
+        const apiKey = localStorage.getItem('flux_api_key') || ""; 
+
+        // Componente Icona per Lucide (necessario per CDN)
+        const Icon = ({ name, size = 20, className = "" }) => {
+            useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
+            }, [name]);
+            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
+        };
+
+        const INITIAL_ARTICLES = [
+            {
+                id: 1,
+                title: "L'Estetica del Silenzio Digitale",
+                subtitle: "Perché il minimalismo non è solo visivo, ma mentale.",
+                author: "Elena V.",
+                readTime: "4 min",
+                category: "Design",
+                image: "https://images.unsplash.com/photo-1449247709967-d4461a6a6103?q=80&w=1000&auto=format&fit=crop",
+                content: "In un'era di rumore costante, il silenzio è diventato il bene di lusso definitivo. Non parliamo solo di assenza di suono, ma di assenza di input. Il design moderno si sta spostando verso interfacce che non urlano, ma sussurrano."
+            },
+            {
+                id: 2,
+                title: "Neuro-Architettura",
+                subtitle: "Come gli spazi virtuali modellano i nostri pensieri.",
+                author: "Marco D.",
+                readTime: "6 min",
+                category: "Tech",
+                image: "https://images.unsplash.com/photo-1518640467707-6811f4a6ab73?q=80&w=1000&auto=format&fit=crop",
+                content: "Le cattedrali gotiche erano progettate per elevare lo spirito. I social media sono progettati per catturare l'attenzione. Cosa succede quando applichiamo i principi dell'architettura sacra al web design?"
+            }
+        ];
+
+        const callGemini = async (prompt, systemInstruction = "") => {
+            const currentKey = localStorage.getItem('flux_api_key');
+            if (!currentKey) throw new Error("API Key mancante");
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${currentKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+            };
+
+            let delay = 1000;
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error('API Error');
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Nessuna risposta.";
+                } catch (err) {
+                    if (i === 4) throw err;
+                    await new Promise(r => setTimeout(r, delay));
+                    delay *= 2;
+                }
+            }
+        };
+
+        const GlassPanel = ({ children, className = "", onClick, theme }) => (
+            <div 
+                onClick={onClick}
+                className={`backdrop-blur-xl border rounded-2xl shadow-2xl transition-all duration-300 ${className} 
+                ${theme === 'neon' ? 'bg-black/60 border-cyan-500/40 shadow-[0_8px_32px_rgba(6,182,212,0.1)]' : 'bg-white/5 border-white/10 shadow-black/20'}`}
+            >
+                {children}
+            </div>
+        );
+
+        const Typewriter = ({ text }) => {
+            const [val, setVal] = useState('');
+            useEffect(() => {
+                let i = 0; setVal('');
+                if (!text) return;
+                const timer = setInterval(() => {
+                    setVal(t => t + text.charAt(i));
+                    i++;
+                    if (i >= text.length) clearInterval(timer);
+                }, 5);
+                return () => clearInterval(timer);
+            }, [text]);
+            return <div className="leading-relaxed whitespace-pre-wrap">{val}</div>;
+        };
+
+        function App() {
+            const [view, setView] = useState('home');
+            const [articles, setArticles] = useState(INITIAL_ARTICLES);
+            const [activeArticle, setActiveArticle] = useState(null);
+            const [theme, setTheme] = useState('dark');
+            const [menuOpen, setMenuOpen] = useState(false);
+            const [aiOpen, setAiOpen] = useState(false);
+            const [scrollProgress, setScrollProgress] = useState(0);
+            const [showApiKeyModal, setShowApiKeyModal] = useState(!localStorage.getItem('flux_api_key'));
+            
+            const [aiChat, setAiChat] = useState([]);
+            const [isAiLoading, setIsAiLoading] = useState(false);
+            const [aiInput, setAiInput] = useState("");
+
+            const [newPost, setNewPost] = useState({
+                title: '', subtitle: '', category: 'Design', content: '', 
+                image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop'
+            });
+
+            useEffect(() => {
+                const handleScroll = () => {
+                    const total = document.documentElement.scrollHeight - window.innerHeight;
+                    setScrollProgress(window.scrollY / (total || 1));
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const handleChat = async () => {
+                if (!aiInput.trim()) return;
+                const msg = aiInput;
+                setAiInput("");
+                setAiChat(p => [...p, { role: 'user', content: msg }]);
+                setIsAiLoading(true);
+                try {
+                    const res = await callGemini(msg, "Sei l'assistente AI di Flux Journal. Rispondi in italiano.");
+                    setAiChat(p => [...p, { role: 'assistant', content: res }]);
+                } catch (e) {
+                    setAiChat(p => [...p, { role: 'assistant', content: "Errore. Verifica la tua API Key." }]);
+                } finally { setIsAiLoading(false); }
+            };
+
+            const saveArticle = () => {
+                if (!newPost.title || !newPost.content) return;
+                const post = {
+                    ...newPost,
+                    id: Date.now(),
+                    author: "Ospite",
+                    readTime: Math.ceil(newPost.content.length / 500) + " min",
+                };
+                setArticles([post, ...articles]);
+                setView('home');
+                setNewPost({ title: '', subtitle: '', category: 'Design', content: '', image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop' });
+            };
+
+            const getThemeClasses = () => {
+                switch(theme) {
+                    case 'neon': return 'bg-[#050505] text-cyan-400';
+                    case 'light': return 'bg-slate-50 text-slate-900';
+                    default: return 'bg-neutral-950 text-white';
+                }
+            };
+
+            return (
+                <div className={`min-h-screen transition-all duration-700 ${getThemeClasses()} selection:bg-cyan-500/40`}>
+                    
+                    {/* Sfondo Animato */}
+                    <div className="fixed inset-0 -z-10 pointer-events-none">
+                        <div className={`absolute top-[-10%] left-[-10%] w-[80vw] h-[80vw] rounded-full blur-[120px] opacity-10 animate-pulse-slow ${theme === 'neon' ? 'bg-cyan-900' : 'bg-cyan-600'}`} />
+                        <div className={`absolute bottom-[-10%] right-[-10%] w-[80vw] h-[80vw] rounded-full blur-[120px] opacity-10 animate-pulse-slow ${theme === 'neon' ? 'bg-fuchsia-900' : 'bg-purple-600'}`} />
+                    </div>
+
+                    {/* Barra Progresso */}
+                    <div className={`fixed top-0 left-0 h-1 z-[120] transition-all ${theme === 'neon' ? 'bg-cyan-400 shadow-[0_0_10px_#22d3ee]' : 'bg-cyan-500'}`} style={{ width: `${scrollProgress * 100}%` }} />
+
+                    {/* Navigazione */}
+                    <nav className="fixed top-0 w-full z-[100] p-4 md:p-6">
+                        <div className={`max-w-6xl mx-auto flex justify-between items-center backdrop-blur-2xl border rounded-full px-4 py-2 md:px-6 md:py-3 transition-colors
+                            ${theme === 'neon' ? 'bg-black/40 border-cyan-500/30' : 'bg-white/10 border-white/20'}`}>
+                            <h1 className="text-xl font-black tracking-tighter cursor-pointer" onClick={() => setView('home')}>FLUX.</h1>
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => setView('write')} className={`p-2 rounded-full transition-all ${view === 'write' ? 'bg-cyan-500 text-black' : 'hover:bg-white/10'}`}>
+                                    <Icon name="plus" />
+                                </button>
+                                <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 hover:bg-white/10 rounded-full">
+                                    <Icon name={menuOpen ? "x" : "menu"} />
+                                </button>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* Modal API Key */}
+                    {showApiKeyModal && (
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+                            <GlassPanel theme="neon" className="p-8 max-w-md w-full text-center space-y-6">
+                                <Icon name="key" size={40} className="mx-auto text-cyan-400" />
+                                <h2 className="text-2xl font-black">Configurazione Flux</h2>
+                                <p className="text-sm opacity-60">Inserisci la tua API Key di Gemini per attivare le funzioni IA. La chiave verrà salvata solo localmente nel tuo browser.</p>
+                                <input 
+                                    type="password"
+                                    placeholder="Incolla API Key qui..."
+                                    className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-center outline-none focus:border-cyan-500 transition-all"
+                                    onKeyDown={(e) => {
+                                        if(e.key === 'Enter') {
+                                            localStorage.setItem('flux_api_key', e.target.value);
+                                            setShowApiKeyModal(false);
+                                        }
+                                    }}
+                                />
+                                <button onClick={() => setShowApiKeyModal(false)} className="text-[10px] uppercase font-bold opacity-40 hover:opacity-100 transition-opacity">Continua senza AI</button>
+                            </GlassPanel>
+                        </div>
+                    )}
+
+                    {/* Main */}
+                    <main className="pt-24 md:pt-36 pb-20 px-4 max-w-6xl mx-auto">
+                        {view === 'home' && (
+                            <div className="fade-in-up">
+                                <header className="mb-16 md:mb-24">
+                                    <h1 className={`text-6xl md:text-[9rem] font-black tracking-tighter leading-none mb-6 ${theme === 'neon' ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]' : ''}`}>
+                                        THE FLUX.
+                                    </h1>
+                                    <p className="text-lg md:text-xl opacity-50 font-light max-w-xl">Il futuro del giornalismo digitale, orchestrato dall'IA.</p>
+                                </header>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {articles.map(a => (
+                                        <GlassPanel key={a.id} theme={theme} className="group cursor-pointer overflow-hidden flex flex-col" onClick={() => {setActiveArticle(a); setView('article'); window.scrollTo(0,0);}}>
+                                            <div className="h-56 overflow-hidden relative">
+                                                <img src={a.image} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
+                                            </div>
+                                            <div className="p-6 flex-1 flex flex-col">
+                                                <span className="text-[10px] uppercase tracking-widest text-cyan-500 font-black mb-3">{a.category}</span>
+                                                <h3 className="text-xl font-bold mb-3 leading-tight group-hover:text-cyan-400 transition-colors">{a.title}</h3>
+                                                <p className="text-sm opacity-50 line-clamp-2">{a.subtitle}</p>
+                                            </div>
+                                        </GlassPanel>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'article' && activeArticle && (
+                            <div className="fade-in-up max-w-3xl mx-auto">
+                                <button onClick={() => setView('home')} className="mb-12 flex items-center gap-3 opacity-50 hover:opacity-100 transition-all font-bold uppercase text-xs tracking-widest"><Icon name="arrow-left" size={16}/> Torna al Flusso</button>
+                                <h1 className="text-4xl md:text-7xl font-black tracking-tighter mb-8 leading-[1.1]">{activeArticle.title}</h1>
+                                <p className="text-xl md:text-2xl font-light opacity-60 italic mb-12 pl-6 border-l-2 border-cyan-500/40">{activeArticle.subtitle}</p>
+                                <img src={activeArticle.image} className="w-full aspect-video rounded-[2.5rem] object-cover mb-16 shadow-2xl" />
+                                <div className="prose prose-invert prose-xl max-w-none opacity-80 leading-[1.8] font-serif">
+                                    {activeArticle.content.split('\n').map((p, i) => <p key={i} className="mb-8">{p}</p>)}
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'write' && (
+                            <div className="fade-in-up max-w-4xl mx-auto">
+                                <div className="flex justify-between items-end mb-12">
+                                    <h2 className="text-6xl font-black tracking-tighter uppercase">Scrivi</h2>
+                                    <button onClick={saveArticle} className="px-10 py-4 bg-cyan-500 text-black font-bold rounded-full shadow-lg shadow-cyan-500/20 active:scale-95 transition-all">PUBBLICA</button>
+                                </div>
+                                <GlassPanel theme={theme} className="p-8 space-y-8">
+                                    <input 
+                                        className="w-full bg-transparent border-b border-white/10 py-6 text-4xl font-bold outline-none focus:border-cyan-500 transition-colors"
+                                        placeholder="Titolo dell'articolo..."
+                                        value={newPost.title}
+                                        onChange={e => setNewPost({...newPost, title: e.target.value})}
+                                    />
+                                    <textarea 
+                                        rows="12" 
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-xl outline-none focus:border-cyan-500 transition-all resize-none font-serif"
+                                        placeholder="Inizia a scrivere la tua storia..."
+                                        value={newPost.content}
+                                        onChange={e => setNewPost({...newPost, content: e.target.value})}
+                                    />
+                                </GlassPanel>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* AI Chat Drawer */}
+                    <div className={`fixed inset-y-0 right-0 z-[130] w-full md:w-[450px] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]
+                        ${aiOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
+                        <div className="h-full bg-black/90 backdrop-blur-3xl border-l border-white/10 flex flex-col">
+                            <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    <Icon name="bot" className="text-cyan-400" />
+                                    <span className="font-bold text-sm tracking-widest uppercase">Flux AI</span>
+                                </div>
+                                <button onClick={() => setAiOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><Icon name="x" /></button>
+                            </div>
+                            
+                            <div className="flex-1 p-6 overflow-y-auto space-y-6 custom-scrollbar">
+                                {aiChat.map((m, i) => (
+                                    <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`p-4 rounded-2xl max-w-[85%] text-sm leading-relaxed ${m.role === 'user' ? 'bg-cyan-500 text-black font-bold' : 'bg-white/5 border border-white/10'}`}>
+                                            {m.role === 'assistant' ? <Typewriter text={m.content} /> : m.content}
+                                        </div>
+                                    </div>
+                                ))}
+                                {isAiLoading && <div className="flex justify-start opacity-50 text-[10px] uppercase font-bold tracking-widest animate-pulse">L'IA sta pensando...</div>}
+                            </div>
+
+                            <div className="p-6 border-t border-white/10">
+                                <div className="flex gap-2 p-2 bg-white/5 border border-white/10 rounded-2xl focus-within:border-cyan-500 transition-all">
+                                    <input 
+                                        className="bg-transparent flex-1 px-4 outline-none text-sm"
+                                        placeholder="Chiedi all'IA di scrivere o analizzare..."
+                                        value={aiInput}
+                                        onChange={e => setAiInput(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && handleChat()}
+                                    />
+                                    <button onClick={handleChat} className="p-3 bg-cyan-500 text-black rounded-xl active:scale-90 transition-all"><Icon name="send" size={18} /></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Pulsante AI Fluttuante */}
+                    {!aiOpen && (
+                        <button 
+                            onClick={() => setAiOpen(true)}
+                            className={`fixed bottom-8 right-8 z-[120] p-6 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-90
+                                ${theme === 'neon' ? 'bg-cyan-400 text-black shadow-cyan-400/50' : 'bg-white text-black'}`}
+                        >
+                            <Icon name="sparkles" size={28} className={theme === 'neon' ? 'animate-pulse' : ''} />
+                        </button>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
